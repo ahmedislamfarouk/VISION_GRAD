@@ -1,0 +1,96 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# PyTorch
+*.pth
+*.pt
+
+# Checkpoints (keep directory but ignore files)
+checkpoints/*
+!checkpoints/.gitkeep
+
+# Logs
+logs/*
+!logs/.gitkeep
+*.log
+
+# Results
+results/*
+!results/.gitkeep
+
+# WandB
+wandb/
+runs/
+
+# TensorBoard
+tensorboard/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dataset (ignore large files)
+datasets/*/train/images/*
+datasets/*/val/images/*
+datasets/*/test/images/*
+datasets/*/train/labels/*
+datasets/*/val/labels/*
+datasets/*/test/labels/*
+!datasets/.gitkeep
+
+# Data
+data/*
+!data/.gitkeep
+
+# DeepSpeed
+deepspeed_checkpoint/
+*.deepspeed
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation
+docs/_build/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
