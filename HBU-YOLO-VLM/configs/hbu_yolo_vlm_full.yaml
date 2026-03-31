@@ -1,0 +1,171 @@
+# HBU-YOLO-VLM Full Configuration (8×A6000 Optimized)
+# For training large model with all components
+
+defaults:
+  - hbu_yolo_vlm_base
+
+# Model Architecture - Larger
+model:
+  num_classes: 10  # Extended disaster classes
+  num_anchors: 3
+  input_size: [640, 640]  # Higher resolution
+
+# YOLO Backbone - Larger
+yolo:
+  model_size: "yolov8l.pt"  # Large backbone
+  pretrained: true
+  freeze_backbone: false
+  freeze_epoch: 3
+
+# VLM - LLaVA-1.6 with Mistral
+vlm:
+  vision_model: "openai/clip-vit-large-patch14-336"
+  llm_model: "mistralai/Mistral-7B-Instruct-v0.1"
+  tokenizer: "mistralai/Mistral-7B-Instruct-v0.1"
+  projection_type: "resampler"  # More efficient
+  freeze_vision_encoder: false
+  unfreeze_vision_layers: 4
+  freeze_llm: false
+  lora_enabled: true
+  lora_rank: 128
+  lora_alpha: 256
+  lora_dropout: 0.05
+
+# Fusion - Enhanced
+fusion:
+  vlm_hidden_size: 4096
+  vlm_num_layers: 32
+  num_heads: 16  # More heads
+  fusion_type: "cross_attention"
+
+# Uncertainty - More paths
+uncertainty:
+  threshold_low: 0.25
+  threshold_high: 0.75
+  num_routing_paths: 3
+
+# Refinement - More iterations
+refinement:
+  num_iterations: 3
+  early_stopping: true
+  early_stopping_threshold: 0.003
+
+# Loss - Balanced
+loss:
+  box_weight: 5.0
+  cls_weight: 1.0
+  lm_weight: 2.0
+  unc_weight: 0.5
+  focal_loss_gamma: 2.0
+
+# Dataset - Combined
+dataset:
+  name: "combined"  # Use all datasets
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+
+# Data Loading - Optimized for 8 GPUs
+data:
+  train_data_dir: "datasets/combined/train"
+  val_data_dir: "datasets/combined/val"
+  test_data_dir: "datasets/combined/test"
+  num_workers: 16  # More workers for 8 GPUs
+  pin_memory: true
+  persistent_workers: true
+
+# Training - Optimized for 8×A6000 (48GB each)
+training:
+  batch_size: 8  # Per GPU → Total batch size = 64
+  
+  num_epochs: 150
+  warmup_epochs: 10
+  
+  optimizer: "adamw"
+  base_lr: 0.0002  # Higher LR for larger batch
+  weight_decay: 0.05
+  clip_grad_norm: 1.0
+  
+  lr_scheduler: "cosine"
+  lr_min: 0.00001
+  warmup_lr: 0.00001
+  
+  gradient_accumulation_steps: 1  # No accumulation needed with 8 GPUs
+  
+  mixed_precision: true
+  amp_dtype: "bfloat16"  # Better for A6000
+  
+  gradient_checkpointing: true  # Save memory
+
+# DeepSpeed - Enable for 8-GPU training
+distributed:
+  enabled: true
+  backend: "nccl"
+  find_unused_parameters: false
+  
+  deepspeed:
+    enabled: true
+    stage: 2  # ZeRO-2
+    offload_optimizer: false
+    offload_param: false
+    gradient_accumulation_steps: 1
+    train_batch_size: 64
+    train_micro_batch_size_per_gpu: 8
+    
+    # ZeRO-2 configuration
+    zero_optimization:
+      stage: 2
+      allgather_partitions: true
+      allgather_bucket_size: 5e8
+      overlap_comm: true
+      reduce_scatter: true
+      reduce_bucket_size: 5e8
+      contiguous_gradients: true
+    
+    # Gradient clipping
+    gradient_clipping: 1.0
+    
+    # FP16/BF16
+    bf16:
+      enabled: true
+    
+    # Logging
+    steps_per_print: 10
+
+# Validation
+validation:
+  val_interval: 2
+  save_best: true
+  metric: "map"
+
+# Checkpoint
+checkpoint:
+  save_interval: 5
+  save_last: true
+  save_best: true
+  keep_last_n: 5
+
+# Logging - Enhanced
+logging:
+  project_name: "HBU-YOLO-VLM-Full"
+  run_name: "8xA6000_full_training"
+  log_interval: 10
+  tensorboard: true
+  wandb: true
+  log_images: true
+  log_images_interval: 50
+
+# Output
+output:
+  output_dir: "checkpoints/hbu_yolo_vlm_full"
+  log_dir: "logs/full"
+  results_dir: "results/full"
+
+# Hardware - 8×A6000
+hardware:
+  num_gpus: 8
+  gpu_ids: [0, 1, 2, 3, 4, 5, 6, 7]
+  cpu_offload: false
+
+# Reproducibility
+seed: 42
